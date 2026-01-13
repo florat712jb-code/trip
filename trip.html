@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Europe</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/south-street/jquery-ui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: #F6F0D7;
+            padding-bottom: 70px;
+        }
+
+        .header {
+            background: #89986D;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #89986D;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: white;
+            padding: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 12px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #9CAB84;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+
+        .total-amount {
+            background: linear-gradient(135deg, #9CAB84, #C5D89D);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .total-amount h2 {
+            color: #89986D;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .total-amount .amount {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .countdown {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #C5D89D;
+        }
+
+        .btn {
+            background: #9CAB84;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+            min-height: 44px;
+        }
+
+        .btn:hover {
+            background: #89986D;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #89986D;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #C5D89D;
+            border-radius: 5px;
+            font-size: 16px;
+            min-height: 44px;
+        }
+
+        .item-list {
+            margin-top: 20px;
+        }
+
+        .item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .delete-btn {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #C5D89D;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #9CAB84;
+            border: 2px solid #F6F0D7;
+        }
+
+        .day-header {
+            background: #89986D;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .packing-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 5px;
+        }
+
+        .packing-item.checked {
+            opacity: 0.6;
+        }
+
+        .packing-item.checked .item-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .packing-item input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            cursor: pointer;
+        }
+
+        .tabs {
+            margin-bottom: 20px;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .category-飲食 { background: #FFE5B4; }
+        .category-交通 { background: #B4D7FF; }
+        .category-住宿 { background: #FFB4E5; }
+        .category-購物 { background: #D7FFB4; }
+        .category-其他 { background: #E5E5E5; }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .total-amount .amount {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>張心寧怕我冷</h1>
+    </div>
+
+    <div class="container">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="countdown">
+                <h3 style="color: #89986D; margin-bottom: 10px;">🗓️ 旅遊期間</h3>
+                <p style="font-size: 18px; color: #9CAB84;">2026年1月16日 - 2026年2月1日</p>
+                <p id="countdownText" style="margin-top: 10px; color: #666; font-size: 16px; font-weight: bold;"></p>
+            </div>
+
+            <div id="todayItinerary">
+                <h3 style="color: #89986D; margin: 20px 0 10px;">今日行程</h3>
+                <div id="todayItineraryContent"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding: 15px; background: white; border-radius: 8px;">
+                <span style="color: #666; font-size: 14px;">總消費：</span>
+                <span style="color: #89986D; font-weight: bold; font-size: 18px;">TWD <span id="totalAmountDisplay2">0</span></span>
+            </div>
+        </div>
+
+        <!-- Documents Page -->
+        <div id="documents" class="page">
+            <h2 style="color: #89986D; margin-bottom: 20px;">📁 旅遊文件</h2>
+            
+            <div id="documentList" class="item-list"></div>
+        </div>
+
+        <!-- Wallet Page -->
+        <div id="wallet" class="page">
+            <h2 style="color: #89986D; margin-bottom: 20px;">💰 記帳</h2>
+            
+            <div class="input-group">
+                <label>金額 (TWD)</label>
+                <input type="number" id="expenseAmount" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label>類別</label>
+                <select id="expenseCategory">
+                    <option value="飲食">飲食</option>
+                    <option value="交通">交通</option>
+                    <option value="住宿">住宿</option>
+                    <option value="購物">購物</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>品項名稱</label>
+                <input type="text" id="expenseName" placeholder="例：午餐">
+            </div>
+            <button class="btn" onclick="addExpense()">新增紀錄</button>
+            
+            <div id="expenseList" class="item-list"></div>
+        </div>
+
+        <!-- Itinerary Page -->
+        <div id="itinerary" class="page">
+            <h2 style="color: #89986D; margin-bottom: 20px;">📅 行程規劃</h2>
+            
+            <div class="input-group">
+                <label>天數</label>
+                <select id="itineraryDay">
+                    <option value="Day 1">Day 1</option>
+                    <option value="Day 2">Day 2</option>
+                    <option value="Day 3">Day 3</option>
+                    <option value="Day 4">Day 4</option>
+                    <option value="Day 5">Day 5</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>時間</label>
+                <input type="time" id="itineraryTime">
+            </div>
+            <div class="input-group">
+                <label>地點/行程</label>
+                <input type="text" id="itineraryPlace" placeholder="例：艾菲爾鐵塔">
+            </div>
+            <div class="input-group">
+                <label>備註</label>
+                <textarea id="itineraryNote" rows="2"></textarea>
+            </div>
+            <button class="btn" onclick="addItinerary()">新增行程</button>
+            
+            <div id="itineraryTimeline" class="timeline"></div>
+        </div>
+
+        <!-- Packing List Page -->
+        <div id="packing" class="page">
+            <h2 style="color: #89986D; margin-bottom: 20px;">🎒 行李清單</h2>
+            
+            <div id="packingList" class="item-list"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('dashboard')">
+            <i>🏠</i>
+            <span>首頁</span>
+        </div>
+        <div class="nav-item" onclick="showPage('documents')">
+            <i>📁</i>
+            <span>文件</span>
+        </div>
+        <div class="nav-item" onclick="showPage('wallet')">
+            <i>💰</i>
+            <span>記帳</span>
+        </div>
+        <div class="nav-item" onclick="showPage('itinerary')">
+            <i>📅</i>
+            <span>行程</span>
+        </div>
+        <div class="nav-item" onclick="showPage('packing')">
+            <i>🎒</i>
+            <span>清單</span>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script>
+        // 資料管理類別
+        class DataManager {
+            static get(key, defaultValue = []) {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : defaultValue;
+            }
+
+            static set(key, value) {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+
+            static add(key, item) {
+                const data = this.get(key);
+                data.push(item);
+                this.set(key, data);
+            }
+
+            static remove(key, index) {
+                const data = this.get(key);
+                data.splice(index, 1);
+                this.set(key, data);
+            }
+        }
+
+        // Dashboard 模組
+        class Dashboard {
+            static init() {
+                this.updateTotalAmount();
+                this.updateCountdown();
+                this.displayTodayItinerary();
+            }
+
+            static updateTotalAmount() {
+                const expenses = DataManager.get('expenses');
+                const total = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+                $('#totalAmountDisplay').text(total.toLocaleString());
+                $('#totalAmountDisplay2').text(total.toLocaleString());
+            }
+
+            static updateCountdown() {
+                const startDate = new Date('2026-01-16');
+                const endDate = new Date('2026-02-01');
+                const today = new Date();
+                
+                // 設定時間為當天的開始，避免時區問題
+                today.setHours(0, 0, 0, 0);
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setHours(0, 0, 0, 0);
+                
+                const diffToStart = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
+                const diffFromStart = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                let text = '';
+                if (today < startDate) {
+                    // 還沒到出發日
+                    text = `還有 ${diffToStart} 天出發 ✈️`;
+                } else if (today >= startDate && today <= endDate) {
+                    // 旅遊進行中
+                    text = `🎉 旅遊第 ${diffFromStart} 天`;
+                } else {
+                    // 旅遊已結束
+                    text = '旅程已結束 💚';
+                }
+                
+                $('#countdownText').text(text);
+            }
+
+            static displayTodayItinerary() {
+                const itineraries = DataManager.get('itineraries');
+                const day1 = itineraries.filter(item => item.day === 'Day 1');
+                let html = '';
+                
+                if (day1.length > 0) {
+                    day1.forEach(item => {
+                        html += `
+                            <div class="timeline-item">
+                                <strong>${item.time}</strong> - ${item.place}
+                                ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = '<p style="color: #999;">尚無行程規劃</p>';
+                }
+                
+                $('#todayItineraryContent').html(html);
+            }
+        }
+
+        // Documents 模組
+        class Documents {
+            static defaultDocuments = [
+                { title: '1/16 Wien-Flughafen-Budapest', url: 'https://drive.google.com/file/d/1LdFd62mXhg6KFjBLYyTaxQrtKEE1TmQd/view?usp=sharing' },
+                { title: '1/21 Budapest-Bratislava', url: 'https://drive.google.com/file/d/1O6VtLf0bbaU_A9u93dsV3TdTIdcEvGVd/view?usp=sharing' },
+                { title: '1/22 Bratislava-Wien', url: 'https://drive.google.com/file/d/1peSZIGFEzlYaSKav5fflYy2YMqzMxMUV/view?usp=sharing' },
+                { title: '1/25 Wien-to-Hallstatt', url: 'https://drive.google.com/file/d/1LmfH2nGiaZ8vONrJi390QboGAu98yuFY/view?usp=sharing' },
+                { title: '1/26 Linz-Cesky-Krumlov', url: 'https://drive.google.com/file/d/1Lo12WdGJvJA8sihnn0Tyn3K20gAn282Q/view?usp=sharing' },
+                { title: '1/27 Cesky-Krumlov-Prague', url: 'https://drive.google.com/file/d/1sZH_ID2yo9kTcmVYVtaVMHSt9eHr7xpS/view?usp=sharing' }
+            ];
+
+            static init() {
+                this.render();
+            }
+
+            static render() {
+                let html = '';
+                
+                this.defaultDocuments.forEach((doc) => {
+                    html += `
+                        <div class="item">
+                            <div class="item-content">
+                                <strong><a href="${doc.url}" target="_blank" style="color: #9CAB84; text-decoration: none;">${doc.title}</a></strong>
+                            </div>
+                            <a href="${doc.url}" target="_blank" style="background: #9CAB84; color: white; border: none; padding: 8px 15px; border-radius: 5px; text-decoration: none; min-height: 44px; display: flex; align-items: center;">查看</a>
+                        </div>
+                    `;
+                });
+                
+                $('#documentList').html(html);
+            }
+        }
+
+        // Wallet 模組
+        class Wallet {
+            static init() {
+                this.render();
+            }
+
+            static render() {
+                const expenses = DataManager.get('expenses');
+                let html = '';
+                
+                expenses.reverse().forEach((exp, index) => {
+                    const actualIndex = expenses.length - 1 - index;
+                    html += `
+                        <div class="item">
+                            <div class="item-content">
+                                <div>${exp.date} | ${exp.name} 
+                                    <span class="category-badge category-${exp.category}">${exp.category}</span>
+                                </div>
+                                <strong style="color: #89986D; font-size: 18px;">TWD ${Number(exp.amount).toLocaleString()}</strong>
+                            </div>
+                            <button class="delete-btn" onclick="Wallet.delete(${actualIndex})">🗑️</button>
+                        </div>
+                    `;
+                });
+                
+                $('#expenseList').html(html || '<p style="color: #999;">尚無消費紀錄</p>');
+                Dashboard.updateTotalAmount();
+            }
+
+            static delete(index) {
+                if (confirm('確定要刪除此筆紀錄？')) {
+                    DataManager.remove('expenses', index);
+                    this.render();
+                }
+            }
+        }
+
+        // Itinerary 模組
+        class Itinerary {
+            static init() {
+                this.render();
+            }
+
+            static render() {
+                const itineraries = DataManager.get('itineraries');
+                const grouped = {};
+                
+                itineraries.forEach(item => {
+                    if (!grouped[item.day]) grouped[item.day] = [];
+                    grouped[item.day].push(item);
+                });
+                
+                let html = '';
+                Object.keys(grouped).sort().forEach(day => {
+                    html += `<div class="day-header">${day}</div>`;
+                    grouped[day].forEach((item, index) => {
+                        html += `
+                            <div class="timeline-item">
+                                <strong>${item.time}</strong> - ${item.place}
+                                ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
+                                <button class="delete-btn" style="margin-top: 10px;" onclick="Itinerary.delete('${day}', ${index})">刪除</button>
+                            </div>
+                        `;
+                    });
+                });
+                
+                $('#itineraryTimeline').html(html || '<p style="color: #999;">尚無行程規劃</p>');
+            }
+
+            static delete(day, index) {
+                if (confirm('確定要刪除此行程？')) {
+                    const itineraries = DataManager.get('itineraries');
+                    const dayItems = itineraries.filter(item => item.day === day);
+                    const targetItem = dayItems[index];
+                    const globalIndex = itineraries.indexOf(targetItem);
+                    DataManager.remove('itineraries', globalIndex);
+                    this.render();
+                    Dashboard.displayTodayItinerary();
+                }
+            }
+        }
+
+        // Packing 模組
+        class Packing {
+            static defaultItems = [
+                '護照', '保暖衣物', '圍巾', '手套', '毛帽', 
+                '保暖襪子', '多一雙鞋子', '拖鞋', '充電器', '轉接插頭',
+                '行動電源', '個人藥品', '衛生紙、濕紙巾', '水壺', '隨身背包',
+                '雨具', '洗髮精', '沐浴乳', '護髮', '牙刷',
+                '牙膏', '乳液', '暖暖包', '泳衣'
+            ];
+
+            static init() {
+                // 檢查是否已有資料
+                let items = DataManager.get('packing', []);
+                
+                // 如果沒有資料或資料為空，使用預設清單
+                if (items.length === 0) {
+                    items = this.defaultItems.map(name => ({ name, checked: false }));
+                    DataManager.set('packing', items);
+                }
+                
+                this.render();
+            }
+
+            static render() {
+                const items = DataManager.get('packing', []);
+                let html = '';
+                
+                if (items.length === 0) {
+                    html = '<p style="color: #999;">載入中...</p>';
+                } else {
+                    items.forEach((item, index) => {
+                        html += `
+                            <div class="packing-item ${item.checked ? 'checked' : ''}">
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} 
+                                       onchange="Packing.toggle(${index})">
+                                <span class="item-text" style="flex: 1;">${item.name}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                $('#packingList').html(html);
+            }
+
+            static toggle(index) {
+                const items = DataManager.get('packing', []);
+                if (items[index]) {
+                    items[index].checked = !items[index].checked;
+                    DataManager.set('packing', items);
+                    this.render();
+                }
+            }
+        }
+
+        // 全域函數
+        function showPage(pageId) {
+            $('.page').removeClass('active');
+            $(`#${pageId}`).addClass('active');
+            $('.nav-item').removeClass('active');
+            $(`.nav-item:contains('${getPageName(pageId)}')`).addClass('active');
+        }
+
+        function getPageName(pageId) {
+            const names = {dashboard: '首頁', documents: '文件', wallet: '記帳', itinerary: '行程', packing: '清單'};
+            return names[pageId];
+        }
+
+        function addDocument(type) {
+            // 此功能已移除，文件為固定清單
+        }
+
+        function addExpense() {
+            const amount = $('#expenseAmount').val();
+            const category = $('#expenseCategory').val();
+            const name = $('#expenseName').val().trim();
+            
+            if (amount && name) {
+                const date = new Date().toLocaleDateString('zh-TW');
+                DataManager.add('expenses', { amount, category, name, date });
+                $('#expenseAmount, #expenseName').val('');
+                Wallet.render();
+            } else {
+                alert('請填寫金額和品項');
+            }
+        }
+
+        function addItinerary() {
+            const day = $('#itineraryDay').val();
+            const time = $('#itineraryTime').val();
+            const place = $('#itineraryPlace').val().trim();
+            const note = $('#itineraryNote').val().trim();
+            
+            if (time && place) {
+                DataManager.add('itineraries', { day, time, place, note });
+                $('#itineraryTime, #itineraryPlace, #itineraryNote').val('');
+                Itinerary.render();
+                Dashboard.displayTodayItinerary();
+            } else {
+                alert('請填寫時間和地點');
+            }
+        }
+
+        // 初始化
+        $(document).ready(function() {
+            Dashboard.init();
+            Documents.init();
+            Wallet.init();
+            Itinerary.init();
+            Packing.init();
+        });
+    </script>
+</body>
+</html>
