@@ -391,6 +391,10 @@
                 <input type="url" id="itineraryMapLink" placeholder="https://maps.google.com/...">
             </div>
             <div class="input-group">
+                <label>其他連結</label>
+                <input type="url" id="itineraryOtherLink" placeholder="部落格、Notion 等其他參考連結">
+            </div>
+            <div class="input-group">
                 <label>備註</label>
                 <textarea id="itineraryNote" rows="2"></textarea>
             </div>
@@ -521,12 +525,18 @@
                 
                 if (todayItems.length > 0) {
                     todayItems.forEach(item => {
-                        const mapLink = item.mapLink ? `<br><a href="${item.mapLink}" target="_blank" style="color: #9CAB84; text-decoration: none;">📍 開啟地圖</a>` : '';
+                        const placeDisplay = item.mapLink 
+                            ? `<a href="${item.mapLink}" target="_blank" style="color: #9CAB84; text-decoration: none;"><strong>${item.place}</strong></a>`
+                            : `<strong>${item.place}</strong>`;
+                        const otherLink = item.otherLink ? `<a href="${item.otherLink}" target="_blank" style="color: #9CAB84; text-decoration: none; font-size: 18px; margin-left: 8px;">🔗</a>` : '';
+                        
                         html += `
                             <div class="timeline-item">
-                                <strong>${item.place}</strong>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    ${placeDisplay}
+                                    ${otherLink}
+                                </div>
                                 ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
-                                ${mapLink}
                             </div>
                         `;
                     });
@@ -626,7 +636,40 @@
 
         // Itinerary 模組
         class Itinerary {
+            static defaultItineraries = [
+                // Day 1 - 1/16
+                { day: 'Day 1', place: '聖伊什特萬聖殿', mapLink: 'https://maps.app.goo.gl/V8tJDc3fo4j6uiaH9', otherLink: '', note: '' },
+                { day: 'Day 1', place: '布達佩斯之眼', mapLink: 'https://maps.app.goo.gl/N5dxuAFAGbHwjmLr7', otherLink: '', note: '' },
+                // Day 2 - 1/17
+                { day: 'Day 2', place: '漁人堡', mapLink: 'https://maps.app.goo.gl/obG4au7E7rCt9qhy6', otherLink: '', note: '' },
+                { day: 'Day 2', place: '布達城堡', mapLink: 'https://maps.app.goo.gl/zNh9dDCCAAWbQKpMA', otherLink: '', note: '' },
+                { day: 'Day 2', place: '瓦茨街', mapLink: 'https://maps.app.goo.gl/4VbTccRxfTsVh69AA', otherLink: '', note: '' },
+                { day: 'Day 2', place: '布達佩斯中央市場', mapLink: 'https://maps.app.goo.gl/aXQJHsPnTBiXXxZy9', otherLink: '', note: '' },
+                { day: 'Day 2', place: '多瑙河遊船', mapLink: 'https://maps.app.goo.gl/SukA5iacSHfLkZe5A', otherLink: '', note: '' },
+                // Day 3 - 1/18
+                { day: 'Day 3', place: '聖安德烈', mapLink: 'https://carolblog.tw/szentendre/', otherLink: 'https://www.notion.so/2a8963c41c4d803594dac11a2f211371', note: '' },
+                // Day 4 - 1/19
+                { day: 'Day 4', place: '英雄廣場', mapLink: 'https://maps.app.goo.gl/tPvxtNedePfCqUY67', otherLink: '', note: '' },
+                { day: 'Day 4', place: '塞切尼溫泉浴場', mapLink: 'https://maps.app.goo.gl/cEBNL6yFPy2691wo9', otherLink: '', note: '' },
+                // Day 5 - 1/20
+                { day: 'Day 5', place: '盧達溫泉', mapLink: 'https://maps.app.goo.gl/bUcKqerDpg75SmdC9', otherLink: 'https://lillian.tw/lukacs-gyogyfurdo/#google_vignette', note: '女生裸湯只開放星期二' },
+                // Day 6 - 1/21
+                { day: 'Day 6', place: '前往斯洛伐克', mapLink: '', otherLink: 'https://www.notion.so/2a8963c41c4d803594dac11a2f211371', note: '中午抵達，走景點都在飯店附近' },
+                // Day 7 - 1/22
+                { day: 'Day 7', place: '前往維也納', mapLink: '', otherLink: '', note: '' },
+                { day: 'Day 7', place: '美泉宮', mapLink: 'https://maps.app.goo.gl/D6ovR1SfmxprhMVt7', otherLink: '', note: '' },
+                // Day 13 - 1/28
+                { day: 'Day 13', place: '布拉格老城廣場', mapLink: 'https://maps.app.goo.gl/8cbjc4dMd6oqP53o9', otherLink: '', note: '' },
+                { day: 'Day 13', place: '布拉格天文鐘', mapLink: 'https://maps.app.goo.gl/GsPcUsR8z1iQZVrg7', otherLink: '', note: '' },
+                { day: 'Day 13', place: '查理大橋', mapLink: 'https://maps.app.goo.gl/qEPS2CaZY6gHirwQ6', otherLink: '', note: '' }
+            ];
+
             static init() {
+                // 初始化預設行程
+                let itineraries = DataManager.get('itineraries', []);
+                if (itineraries.length === 0) {
+                    DataManager.set('itineraries', this.defaultItineraries);
+                }
                 this.render();
             }
 
@@ -660,14 +703,22 @@
                         html += `<div class="day-header">${dayLabels[day] || day}</div>`;
                         html += `<div class="sortable-day" data-day="${day}">`;
                         grouped[day].forEach((item, index) => {
-                            const mapLink = item.mapLink ? `<a href="${item.mapLink}" target="_blank" style="color: #9CAB84; text-decoration: none; margin-top: 5px; display: inline-block;">📍 開啟地圖</a>` : '';
+                            const placeDisplay = item.mapLink 
+                                ? `<a href="${item.mapLink}" target="_blank" style="color: #9CAB84; text-decoration: none;"><strong>${item.place}</strong></a>`
+                                : `<strong>${item.place}</strong>`;
+                            const otherLink = item.otherLink ? `<a href="${item.otherLink}" target="_blank" style="color: #9CAB84; text-decoration: none; font-size: 18px;">🔗</a>` : '';
+                            
                             html += `
                                 <div class="timeline-item" draggable="true" data-day="${day}" data-index="${index}">
-                                    <span class="drag-handle">☰</span>
-                                    <strong>${item.place}</strong>
-                                    ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
-                                    ${mapLink}
-                                    <button class="delete-btn" style="margin-top: 10px;" onclick="Itinerary.delete('${day}', ${index})">刪除</button>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span class="drag-handle">☰</span>
+                                            ${placeDisplay}
+                                            ${otherLink}
+                                        </div>
+                                        <button class="delete-btn" onclick="Itinerary.delete('${day}', ${index})">🗑️</button>
+                                    </div>
+                                    ${item.note ? `<p style="margin-top: 5px; color: #666; margin-left: 28px;">${item.note}</p>` : ''}
                                 </div>
                             `;
                         });
@@ -861,11 +912,12 @@
             const day = $('#itineraryDay').val();
             const place = $('#itineraryPlace').val().trim();
             const mapLink = $('#itineraryMapLink').val().trim();
+            const otherLink = $('#itineraryOtherLink').val().trim();
             const note = $('#itineraryNote').val().trim();
             
             if (place) {
-                DataManager.add('itineraries', { day, place, mapLink, note });
-                $('#itineraryPlace, #itineraryMapLink, #itineraryNote').val('');
+                DataManager.add('itineraries', { day, place, mapLink, otherLink, note });
+                $('#itineraryPlace, #itineraryMapLink, #itineraryOtherLink, #itineraryNote').val('');
                 Itinerary.render();
                 Dashboard.displayTodayItinerary();
             } else {
