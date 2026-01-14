@@ -197,6 +197,19 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: move;
+            user-select: none;
+        }
+
+        .timeline-item.dragging {
+            opacity: 0.5;
+        }
+
+        .timeline-item .drag-handle {
+            cursor: grab;
+            color: #9CAB84;
+            margin-right: 10px;
+            font-size: 18px;
         }
 
         .timeline-item::before {
@@ -303,6 +316,16 @@
         <div id="documents" class="page">
             <h2 style="color: #89986D; margin-bottom: 20px;">📁 旅遊文件</h2>
             
+            <div class="input-group">
+                <label>標題</label>
+                <input type="text" id="docTitle" placeholder="例：飯店訂房確認">
+            </div>
+            <div class="input-group">
+                <label>雲端連結</label>
+                <input type="url" id="docUrl" placeholder="https://...">
+            </div>
+            <button class="btn" onclick="addDocument()">新增文件</button>
+            
             <div id="documentList" class="item-list"></div>
         </div>
 
@@ -340,20 +363,32 @@
             <div class="input-group">
                 <label>天數</label>
                 <select id="itineraryDay">
-                    <option value="Day 1">Day 1</option>
-                    <option value="Day 2">Day 2</option>
-                    <option value="Day 3">Day 3</option>
-                    <option value="Day 4">Day 4</option>
-                    <option value="Day 5">Day 5</option>
+                    <option value="Day 1">Day 1 - 1/16</option>
+                    <option value="Day 2">Day 2 - 1/17</option>
+                    <option value="Day 3">Day 3 - 1/18</option>
+                    <option value="Day 4">Day 4 - 1/19</option>
+                    <option value="Day 5">Day 5 - 1/20</option>
+                    <option value="Day 6">Day 6 - 1/21</option>
+                    <option value="Day 7">Day 7 - 1/22</option>
+                    <option value="Day 8">Day 8 - 1/23</option>
+                    <option value="Day 9">Day 9 - 1/24</option>
+                    <option value="Day 10">Day 10 - 1/25</option>
+                    <option value="Day 11">Day 11 - 1/26</option>
+                    <option value="Day 12">Day 12 - 1/27</option>
+                    <option value="Day 13">Day 13 - 1/28</option>
+                    <option value="Day 14">Day 14 - 1/29</option>
+                    <option value="Day 15">Day 15 - 1/30</option>
+                    <option value="Day 16">Day 16 - 1/31</option>
+                    <option value="Day 17">Day 17 - 2/1</option>
                 </select>
-            </div>
-            <div class="input-group">
-                <label>時間</label>
-                <input type="time" id="itineraryTime">
             </div>
             <div class="input-group">
                 <label>地點/行程</label>
                 <input type="text" id="itineraryPlace" placeholder="例：艾菲爾鐵塔">
+            </div>
+            <div class="input-group">
+                <label>Google Maps 連結</label>
+                <input type="url" id="itineraryMapLink" placeholder="https://maps.google.com/...">
             </div>
             <div class="input-group">
                 <label>備註</label>
@@ -466,21 +501,37 @@
             }
 
             static displayTodayItinerary() {
+                const startDate = new Date('2026-01-16');
+                const today = new Date();
+                
+                today.setHours(0, 0, 0, 0);
+                startDate.setHours(0, 0, 0, 0);
+                
+                // 計算當前是第幾天
+                const diffFromStart = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                let currentDay = 'Day 1';
+                if (today >= startDate && today <= new Date('2026-02-01')) {
+                    currentDay = `Day ${diffFromStart}`;
+                }
+                
                 const itineraries = DataManager.get('itineraries');
-                const day1 = itineraries.filter(item => item.day === 'Day 1');
+                const todayItems = itineraries.filter(item => item.day === currentDay);
                 let html = '';
                 
-                if (day1.length > 0) {
-                    day1.forEach(item => {
+                if (todayItems.length > 0) {
+                    todayItems.forEach(item => {
+                        const mapLink = item.mapLink ? `<br><a href="${item.mapLink}" target="_blank" style="color: #9CAB84; text-decoration: none;">📍 開啟地圖</a>` : '';
                         html += `
                             <div class="timeline-item">
-                                <strong>${item.time}</strong> - ${item.place}
+                                <strong>${item.place}</strong>
                                 ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
+                                ${mapLink}
                             </div>
                         `;
                     });
                 } else {
-                    html = '<p style="color: #999;">尚無行程規劃</p>';
+                    html = `<p style="color: #999;">尚無 ${currentDay} 的行程規劃</p>`;
                 }
                 
                 $('#todayItineraryContent').html(html);
@@ -499,24 +550,40 @@
             ];
 
             static init() {
+                // 初始化預設文件
+                let docs = DataManager.get('documents', []);
+                if (docs.length === 0) {
+                    DataManager.set('documents', this.defaultDocuments);
+                }
                 this.render();
             }
 
             static render() {
+                const docs = DataManager.get('documents', []);
                 let html = '';
                 
-                this.defaultDocuments.forEach((doc) => {
+                docs.forEach((doc, index) => {
                     html += `
                         <div class="item">
                             <div class="item-content">
                                 <strong><a href="${doc.url}" target="_blank" style="color: #9CAB84; text-decoration: none;">${doc.title}</a></strong>
                             </div>
-                            <a href="${doc.url}" target="_blank" style="background: #9CAB84; color: white; border: none; padding: 8px 15px; border-radius: 5px; text-decoration: none; min-height: 44px; display: flex; align-items: center;">查看</a>
+                            <div style="display: flex; gap: 10px;">
+                                <a href="${doc.url}" target="_blank" style="background: #9CAB84; color: white; border: none; padding: 8px 15px; border-radius: 5px; text-decoration: none; min-height: 44px; display: flex; align-items: center;">查看</a>
+                                <button class="delete-btn" onclick="Documents.delete(${index})">🗑️</button>
+                            </div>
                         </div>
                     `;
                 });
                 
-                $('#documentList').html(html);
+                $('#documentList').html(html || '<p style="color: #999;">尚無文件</p>');
+            }
+
+            static delete(index) {
+                if (confirm('確定要刪除此文件？')) {
+                    DataManager.remove('documents', index);
+                    this.render();
+                }
             }
         }
 
@@ -572,21 +639,114 @@
                     grouped[item.day].push(item);
                 });
                 
+                const dayOrder = [
+                    'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6',
+                    'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12',
+                    'Day 13', 'Day 14', 'Day 15', 'Day 16', 'Day 17'
+                ];
+                
+                const dayLabels = {
+                    'Day 1': 'Day 1 - 1/16', 'Day 2': 'Day 2 - 1/17', 'Day 3': 'Day 3 - 1/18',
+                    'Day 4': 'Day 4 - 1/19', 'Day 5': 'Day 5 - 1/20', 'Day 6': 'Day 6 - 1/21',
+                    'Day 7': 'Day 7 - 1/22', 'Day 8': 'Day 8 - 1/23', 'Day 9': 'Day 9 - 1/24',
+                    'Day 10': 'Day 10 - 1/25', 'Day 11': 'Day 11 - 1/26', 'Day 12': 'Day 12 - 1/27',
+                    'Day 13': 'Day 13 - 1/28', 'Day 14': 'Day 14 - 1/29', 'Day 15': 'Day 15 - 1/30',
+                    'Day 16': 'Day 16 - 1/31', 'Day 17': 'Day 17 - 2/1'
+                };
+                
                 let html = '';
-                Object.keys(grouped).sort().forEach(day => {
-                    html += `<div class="day-header">${day}</div>`;
-                    grouped[day].forEach((item, index) => {
-                        html += `
-                            <div class="timeline-item">
-                                <strong>${item.time}</strong> - ${item.place}
-                                ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
-                                <button class="delete-btn" style="margin-top: 10px;" onclick="Itinerary.delete('${day}', ${index})">刪除</button>
-                            </div>
-                        `;
-                    });
+                dayOrder.forEach(day => {
+                    if (grouped[day]) {
+                        html += `<div class="day-header">${dayLabels[day] || day}</div>`;
+                        html += `<div class="sortable-day" data-day="${day}">`;
+                        grouped[day].forEach((item, index) => {
+                            const mapLink = item.mapLink ? `<a href="${item.mapLink}" target="_blank" style="color: #9CAB84; text-decoration: none; margin-top: 5px; display: inline-block;">📍 開啟地圖</a>` : '';
+                            html += `
+                                <div class="timeline-item" draggable="true" data-day="${day}" data-index="${index}">
+                                    <span class="drag-handle">☰</span>
+                                    <strong>${item.place}</strong>
+                                    ${item.note ? `<p style="margin-top: 5px; color: #666;">${item.note}</p>` : ''}
+                                    ${mapLink}
+                                    <button class="delete-btn" style="margin-top: 10px;" onclick="Itinerary.delete('${day}', ${index})">刪除</button>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
                 });
                 
                 $('#itineraryTimeline').html(html || '<p style="color: #999;">尚無行程規劃</p>');
+                this.initDragAndDrop();
+            }
+
+            static initDragAndDrop() {
+                const items = document.querySelectorAll('.timeline-item');
+                let draggedItem = null;
+                let draggedDay = null;
+                let draggedIndex = null;
+
+                items.forEach(item => {
+                    item.addEventListener('dragstart', (e) => {
+                        draggedItem = item;
+                        draggedDay = item.dataset.day;
+                        draggedIndex = parseInt(item.dataset.index);
+                        item.classList.add('dragging');
+                    });
+
+                    item.addEventListener('dragend', (e) => {
+                        item.classList.remove('dragging');
+                    });
+
+                    item.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        const afterElement = this.getDragAfterElement(item.parentElement, e.clientY);
+                        if (afterElement == null) {
+                            item.parentElement.appendChild(draggedItem);
+                        } else {
+                            item.parentElement.insertBefore(draggedItem, afterElement);
+                        }
+                    });
+
+                    item.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const targetDay = item.dataset.day;
+                        
+                        if (draggedDay === targetDay) {
+                            // 重新排序同一天內的行程
+                            const itineraries = DataManager.get('itineraries');
+                            const dayItems = itineraries.filter(it => it.day === draggedDay);
+                            const otherItems = itineraries.filter(it => it.day !== draggedDay);
+                            
+                            // 獲取新的順序
+                            const container = document.querySelector(`.sortable-day[data-day="${draggedDay}"]`);
+                            const newOrder = Array.from(container.querySelectorAll('.timeline-item')).map(el => {
+                                return parseInt(el.dataset.index);
+                            });
+                            
+                            const reorderedDayItems = newOrder.map(idx => dayItems[idx]);
+                            const newItineraries = [...otherItems, ...reorderedDayItems];
+                            
+                            DataManager.set('itineraries', newItineraries);
+                            this.render();
+                            Dashboard.displayTodayItinerary();
+                        }
+                    });
+                });
+            }
+
+            static getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.timeline-item:not(.dragging)')];
+                
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
 
             static delete(day, index) {
@@ -609,7 +769,7 @@
                 '保暖襪子', '多一雙鞋子', '拖鞋', '充電器', '轉接插頭',
                 '行動電源', '個人藥品', '衛生紙、濕紙巾', '水壺', '隨身背包',
                 '雨具', '洗髮精', '沐浴乳', '護髮', '牙刷',
-                '牙膏', '乳液', '暖暖包', '泳衣'
+                '牙膏', '乳液', '暖暖包', '泳衣', '泳帽'
             ];
 
             static init() {
@@ -669,8 +829,17 @@
             return names[pageId];
         }
 
-        function addDocument(type) {
-            // 此功能已移除，文件為固定清單
+        function addDocument() {
+            const title = $('#docTitle').val().trim();
+            const url = $('#docUrl').val().trim();
+            
+            if (title && url) {
+                DataManager.add('documents', { title, url });
+                $('#docTitle, #docUrl').val('');
+                Documents.render();
+            } else {
+                alert('請填寫標題和連結');
+            }
         }
 
         function addExpense() {
@@ -690,17 +859,17 @@
 
         function addItinerary() {
             const day = $('#itineraryDay').val();
-            const time = $('#itineraryTime').val();
             const place = $('#itineraryPlace').val().trim();
+            const mapLink = $('#itineraryMapLink').val().trim();
             const note = $('#itineraryNote').val().trim();
             
-            if (time && place) {
-                DataManager.add('itineraries', { day, time, place, note });
-                $('#itineraryTime, #itineraryPlace, #itineraryNote').val('');
+            if (place) {
+                DataManager.add('itineraries', { day, place, mapLink, note });
+                $('#itineraryPlace, #itineraryMapLink, #itineraryNote').val('');
                 Itinerary.render();
                 Dashboard.displayTodayItinerary();
             } else {
-                alert('請填寫時間和地點');
+                alert('請填寫地點');
             }
         }
 
